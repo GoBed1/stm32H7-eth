@@ -113,8 +113,30 @@
 #define CHECKSUM_CHECK_ICMP6 0
 /*-----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
+#define SNTP_SET_SYSTEM_TIME(sec) sntp_get_time(sec)
+/* ETH_CODE: first 2 macros solve errno issue with GCC 10 and ST LwIP
+ * LWIPERF_CHECK_RX_DATA enables data check for iperf. Removing it might improve performance.
+ */
+
 #undef LWIP_PROVIDE_ERRNO
 #define LWIP_ERRNO_STDINCLUDE
+
+#define LWIPERF_CHECK_RX_DATA 1
+
+/* ETH_CODE: macro and prototypes for proper (hopefuly?)
+ * multithreading support
+ */
+#define LOCK_TCPIP_CORE sys_lock_tcpip_core
+#define UNLOCK_TCPIP_CORE sys_unlock_tcpip_core
+
+#define LWIP_ASSERT_CORE_LOCKED sys_check_core_locking
+#define LWIP_MARK_TCPIP_THREAD sys_mark_tcpip_thread
+
+void sys_lock_tcpip_core(void);
+void sys_unlock_tcpip_core(void);
+
+void sys_check_core_locking(void);
+void sys_mark_tcpip_thread(void);
 /* USER CODE END 1 */
 
 #ifdef __cplusplus

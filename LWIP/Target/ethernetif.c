@@ -33,6 +33,8 @@
 
 /* Within 'USER CODE' section, code will be kept by default at each generation */
 /* USER CODE BEGIN 0 */
+//#include "App_eth.h"
+
 
 /* USER CODE END 0 */
 
@@ -131,6 +133,23 @@ __attribute__((section(".Rx_PoolSection"))) extern u8_t memp_memory_RX_POOL_base
 #endif
 
 /* USER CODE BEGIN 2 */
+/* ETH_CODE: placement of RX_POOL
+ * Please note this was tested only for GCC compiler.
+ * Additional code needed in linkerscript for GCC.
+ *
+ * Also this buffer can be placed in D1 SRAM
+ * if there is not sufficient space in D2.
+ * This can be case of STM32H72x/H73x devices.
+ * However the 32-byte alignment should be forced.
+ * Below is example of placement into BSS section
+ *
+ * . = ALIGN(32);
+ * *(.Rx_PoolSection)
+ * . = ALIGN(4);
+ * _ebss = .;
+ *  __bss_end__ = _ebss;
+ * } >RAM_D1
+ */
 #if defined ( __ICCARM__ ) /*!< IAR Compiler */
 #pragma location = 0x30040200
 extern u8_t memp_memory_RX_POOL_base[];
@@ -171,6 +190,16 @@ lan8742_IOCtx_t  LAN8742_IOCtx = {ETH_PHY_IO_Init,
 /* USER CODE END 3 */
 
 /* Private functions ---------------------------------------------------------*/
+
+void reset_phy(void)
+{
+  HAL_GPIO_WritePin(ETH_RST_GPIO_Port, ETH_RST_Pin, GPIO_PIN_RESET);
+  osDelay(55);
+  HAL_GPIO_WritePin(ETH_RST_GPIO_Port, ETH_RST_Pin, GPIO_PIN_SET);
+  osDelay(55);
+}
+
+
 void pbuf_free_custom(struct pbuf *p);
 
 /**
@@ -298,7 +327,7 @@ static void low_level_init(struct netif *netif)
 /* USER CODE END OS_THREAD_NEW_CMSIS_RTOS_V2 */
 
 /* USER CODE BEGIN PHY_PRE_CONFIG */
-
+reset_phy();
 /* USER CODE END PHY_PRE_CONFIG */
   /* Set PHY IO functions */
   LAN8742_RegisterBusIO(&LAN8742, &LAN8742_IOCtx);
@@ -806,7 +835,14 @@ void ethernet_link_thread(void* argument)
 
   struct netif *netif = (struct netif *) argument;
 /* USER CODE BEGIN ETH link init */
-
+/* ETH_CODE: call HAL_ETH_Start_IT instead of HAL_ETH_Start
+   * This is required for operation with RTOS.
+   * This trick allows to keep this change through
+   * code re-generation by STM32CubeMX
+   */
+#define HAL_ETH_Start HAL_ETH_Start_IT
+  /* ETH_CODE: workaround to call LOCK_TCPIP_CORE when accessing netif link functions*/
+  LOCK_TCPIP_CORE();
 /* USER CODE END ETH link init */
 
   for(;;)
@@ -861,7 +897,11 @@ void ethernet_link_thread(void* argument)
   }
 
 /* USER CODE BEGIN ETH link Thread core code for User BSP */
-
+ /* ETH_CODE: workaround to call LOCK_TCPIP_CORE when accessing netif link functions*/
+  UNLOCK_TCPIP_CORE();
+  osDelay(100);
+  LOCK_TCPIP_CORE();
+  continue; /* skip next osDelay */
 /* USER CODE END ETH link Thread core code for User BSP */
 
     osDelay(100);
@@ -940,5 +980,43 @@ void HAL_ETH_TxFreeCallback(uint32_t * buff)
 }
 
 /* USER CODE BEGIN 8 */
+/* ETH_CODE: add functions needed for proper multithreading support and check */
 
+static osThreadId_t lwip_core_lock_holder_thread_id;
+static osThreadId_t lwip_tcpip_thread_id;
+
+void sys_lock_tcpip_core(void){
+	sys_mutex_lock(&lock_tcpip_core);
+	lwip_core_lock_holder_thread_id = osThreadGetId();
+}
+
+void sys_unlock_tcpip_core(void){
+	lwip_core_lock_holder_thread_id = 0;
+	sys_mutex_unlock(&lock_tcpip_core);
+}
+
+void sys_check_core_locking(void){
+  /* Embedded systems should check we are NOT in an interrupt context here */
+
+  LWIP_ASSERT("Function called from interrupt context", (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) == 0);
+
+  if (lwip_tcpip_thread_id != 0) {
+	  osThreadId_t current_thread_id = osThreadGetId();
+
+#if LWIP_TCPIP_CORE_LOCKING
+	LWIP_ASSERT("Function called without core lock", current_thread_id == lwip_core_lock_holder_thread_id);
+	/* ETH_CODE: to easily check that example has correct handling of core lock
+	 * This will trigger breakpoint (__BKPT)
+	 */
+#warning Below check should be removed in production code
+	if(current_thread_id != lwip_core_lock_holder_thread_id) __BKPT(0);
+#else /* LWIP_TCPIP_CORE_LOCKING */
+	LWIP_ASSERT("Function called from wrong thread", current_thread_id == lwip_tcpip_thread_id);
+#endif /* LWIP_TCPIP_CORE_LOCKING */
+	LWIP_UNUSED_ARG(current_thread_id); /* for LWIP_NOASSERT */
+  }
+}
+void sys_mark_tcpip_thread(void){
+	lwip_tcpip_thread_id = osThreadGetId();
+}
 /* USER CODE END 8 */

@@ -54,6 +54,12 @@
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+{
+   /* ETH_CODE: add breakpoint when stack oveflow is detected by FreeRTOS.
+    * Useful for debugging issues.
+    */
+   __BKPT(0);
+}
 /* USER CODE END Application */
 
