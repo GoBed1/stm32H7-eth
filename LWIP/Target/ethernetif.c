@@ -33,7 +33,7 @@
 
 /* Within 'USER CODE' section, code will be kept by default at each generation */
 /* USER CODE BEGIN 0 */
-//#include "App_eth.h"
+#include "App_eth.h"
 
 
 /* USER CODE END 0 */
@@ -190,16 +190,6 @@ lan8742_IOCtx_t  LAN8742_IOCtx = {ETH_PHY_IO_Init,
 /* USER CODE END 3 */
 
 /* Private functions ---------------------------------------------------------*/
-
-void reset_phy(void)
-{
-  HAL_GPIO_WritePin(ETH_RST_GPIO_Port, ETH_RST_Pin, GPIO_PIN_RESET);
-  osDelay(55);
-  HAL_GPIO_WritePin(ETH_RST_GPIO_Port, ETH_RST_Pin, GPIO_PIN_SET);
-  osDelay(55);
-}
-
-
 void pbuf_free_custom(struct pbuf *p);
 
 /**
@@ -234,7 +224,13 @@ void HAL_ETH_ErrorCallback(ETH_HandleTypeDef *handlerEth)
 }
 
 /* USER CODE BEGIN 4 */
-
+//void reset_phy(void)
+//{
+//  HAL_GPIO_WritePin(ETH_RST_GPIO_Port, ETH_RST_Pin, GPIO_PIN_RESET);
+//  osDelay(55);
+//  HAL_GPIO_WritePin(ETH_RST_GPIO_Port, ETH_RST_Pin, GPIO_PIN_SET);
+//  osDelay(55);
+//}
 /* USER CODE END 4 */
 
 /*******************************************************************************

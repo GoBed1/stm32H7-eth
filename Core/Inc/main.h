@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "board.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -63,7 +63,21 @@ void Error_Handler(void);
 #define LED1_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
-
+#ifndef LOG_LEVEL_NONE
+#define LOG_LEVEL_NONE    0
+#define LOG_LEVEL_ERROR   1
+#define LOG_LEVEL_WARNING 2
+#define LOG_LEVEL_INFO    3
+#define LOG_LEVEL_DEBUG   4
+#define LOG_LEVEL_VERBOSE 5
+#endif
+#define LOG_PRINTF(level,tag,...) logger_printf(level,tag,__VA_ARGS__)
+#define LOG_PRINTF_LINE(level,tag,...) logger_printf_line(level,tag,__VA_ARGS__)
+#define LOG_DEBUG(tag,...)    LOG_PRINTF(LOG_LEVEL_DEBUG,tag,__VA_ARGS__)
+#define LOG_INFO(tag,...)     LOG_PRINTF(LOG_LEVEL_INFO,tag,__VA_ARGS__)
+#define LOG_WARNING(tag,...)  LOG_PRINTF(LOG_LEVEL_WARNING,tag,__VA_ARGS__)
+#define LOG_ERROR(tag,...)    LOG_PRINTF(LOG_LEVEL_ERROR,tag,__VA_ARGS__)
+void check_stack_watermark(const char* task_name);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

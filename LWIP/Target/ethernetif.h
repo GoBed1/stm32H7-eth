@@ -32,8 +32,6 @@
 /* Exported functions ------------------------------------------------------- */
 err_t ethernetif_init(struct netif *netif);
 
-void reset_phy(void);
-
 void ethernetif_input(void* argument);
 void ethernet_link_thread(void* argument );
 
@@ -42,6 +40,6 @@ u32_t sys_jiffies(void);
 u32_t sys_now(void);
 
 /* USER CODE BEGIN 1 */
-
+void reset_phy(void);
 /* USER CODE END 1 */
 #endif

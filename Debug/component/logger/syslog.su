@@ -1,0 +1,13 @@
+../component/logger/syslog.c:62:25:get_logger_obj	4	static
+../component/logger/syslog.c:67:12:syslog_get_severity	16	static
+../component/logger/syslog.c:81:12:syslog_get_priority	24	static
+../component/logger/syslog.c:86:15:syslog_format_msg	80	static
+../component/logger/syslog.c:105:6:init_logger	80	static
+../component/logger/syslog.c:180:6:logger_output	1080	static
+../component/logger/syslog.c:235:6:logger_printf	536	static
+../component/logger/syslog.c:250:6:logger_printf_line	312	static
+../component/logger/syslog.c:342:6:logger_set_min_level	24	static
+../component/logger/syslog.c:352:13:logger_get_min_level	16	static
+../component/logger/syslog.c:359:6:logger_get_stats	24	static
+../component/logger/syslog.c:371:6:logger_reset_stats	16	static
+../component/logger/syslog.c:382:5:logger_is_initialized	16	static
